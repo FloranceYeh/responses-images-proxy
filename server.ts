@@ -305,6 +305,9 @@ function configureRuntime(bindings?: RuntimeEnvBindings): AppConfig {
 
 
 const LOG_ORDER: Record<LogLevel, number> = { debug: 10, info: 20, warn: 30, error: 40 };
+function printPrettyDivider(label: string): void {
+  console.log(`【${label}】`);
+}
 
 function log(level: LogLevel, message: string, fields: Record<string, unknown> = {}): void {
   if (LOG_ORDER[level] < LOG_ORDER[CONFIG.logLevel]) return;
@@ -331,12 +334,11 @@ function log(level: LogLevel, message: string, fields: Record<string, unknown> =
       }
     };
 
-    const fieldsStr = Object.keys(fields).length
-      ? " " + Object.entries(fields).map(([k, v]) => `${k}=${fmtValue(v)}`).join(" ")
-      : "";
-
     const levelLabel = level.toUpperCase();
     const coloredLevel = (colorMap[level] || "") + levelLabel + reset;
+    const fieldsStr = Object.keys(fields).length
+      ? " | " + Object.entries(fields).map(([k, v]) => `${k}=${fmtValue(v)}`).join(" | ")
+      : "";
     const line = `[${ts}] ${coloredLevel} ${message}${fieldsStr}`;
 
     if (level === "error") console.error(line);
@@ -1852,6 +1854,7 @@ async function route(req: Request): Promise<Response> {
   }
 
   const started = Date.now();
+  if (CONFIG.prettyLogs) printPrettyDivider(`request start ${requestId}`);
   log("info", "request received", {
     request_id: requestId,
     method: req.method,
@@ -1890,6 +1893,7 @@ async function route(req: Request): Promise<Response> {
       path,
       elapsed_ms: Date.now() - started,
     });
+    if (CONFIG.prettyLogs) printPrettyDivider(`request end ${requestId}`);
   }
 }
 
